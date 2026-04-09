@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hint App</title>
+
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background: #f7f7f5;
+}
+button {
+  padding: 15px;
+  margin: 10px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>오늘의 나를 위한 추천 Hint</h2>
+
+<button onclick="pay()">유료 운세 보기 (0.1 Pi)</button>
+
+<p id="result"></p>
+
+<script>
+const Pi = window.Pi;
+
+Pi.init({ version: "2.0" });
+
+function pay() {
+  Pi.createPayment({
+    amount: 0.1,
+    memo: "프리미엄 운세",
+    metadata: { type: "fortune" }
+  }, {
+    onReadyForServerApproval: function(paymentId) {
+      fetch("https://hint-pi-server-production.up.railway.app/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId })
+      });
+    },
+    onReadyForServerCompletion: function(paymentId, txid) {
+      fetch("https://hint-pi-server-production.up.railway.app/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId, txid })
+      });
+    },
+    onCancel: function() {
+      alert("결제 취소됨");
+    },
+    onError: function(error) {
+      console.error(error);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
